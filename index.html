@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+
+	<title>Scramble of the day</title>
+	<style type="text/css">
+		html,
+		body {
+			font-family: "Arial";
+			font-size: 43px;
+		}
+
+		html,
+		body,
+		.container {
+			height: 100%;
+		}
+
+		.container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+		@media all and (max-width: 600px) and (orientation: portrait) {
+			#result {
+				font-size: 50px;
+			}
+		}
+
+		#result {
+			margin-top: 10;
+			margin-bottom: 5%;
+			font-size: 45px;
+		}
+
+
+	</style>
+
+	<script type="text/javascript">
+		!function (f, a, c) { var s, l = 256, p = "random", d = c.pow(l, 6), g = c.pow(2, 52), y = 2 * g, h = l - 1; function n(n, t, r) { function e() { for (var n = u.g(6), t = d, r = 0; n < g;)n = (n + r) * l, t *= l, r = u.g(1); for (; y <= n;)n /= 2, t /= 2, r >>>= 1; return (n + r) / t } var o = [], i = j(function n(t, r) { var e, o = [], i = typeof t; if (r && "object" == i) for (e in t) try { o.push(n(t[e], r - 1)) } catch (n) { } return o.length ? o : "string" == i ? t : t + "\0" }((t = 1 == t ? { entropy: !0 } : t || {}).entropy ? [n, S(a)] : null == n ? function () { try { var n; return s && (n = s.randomBytes) ? n = n(l) : (n = new Uint8Array(l), (f.crypto || f.msCrypto).getRandomValues(n)), S(n) } catch (n) { var t = f.navigator, r = t && t.plugins; return [+new Date, f, r, f.screen, S(a)] } }() : n, 3), o), u = new m(o); return e.int32 = function () { return 0 | u.g(4) }, e.quick = function () { return u.g(4) / 4294967296 }, e.double = e, j(S(u.S), a), (t.pass || r || function (n, t, r, e) { return e && (e.S && v(e, u), n.state = function () { return v(u, {}) }), r ? (c[p] = n, t) : n })(e, i, "global" in t ? t.global : this == c, t.state) } function m(n) { var t, r = n.length, u = this, e = 0, o = u.i = u.j = 0, i = u.S = []; for (r || (n = [r++]); e < l;)i[e] = e++; for (e = 0; e < l; e++)i[e] = i[o = h & o + n[e % r] + (t = i[e])], i[o] = t; (u.g = function (n) { for (var t, r = 0, e = u.i, o = u.j, i = u.S; n--;)t = i[e = h & e + 1], r = r * l + i[h & (i[e] = i[o = h & o + t]) + (i[o] = t)]; return u.i = e, u.j = o, r })(l) } function v(n, t) { return t.i = n.i, t.j = n.j, t.S = n.S.slice(), t } function j(n, t) { for (var r, e = n + "", o = 0; o < e.length;)t[h & o] = h & (r ^= 19 * t[h & o]) + e.charCodeAt(o++); return S(t) } function S(n) { return String.fromCharCode.apply(0, n) } if (j(c.random(), a), "object" == typeof module && module.exports) { module.exports = n; try { s = require("crypto") } catch (n) { } } else "function" == typeof define && define.amd ? define(function () { return n }) : c["seed" + p] = n }("undefined" != typeof self ? self : this, [], Math);
+
+		function cyrb128(str) {
+			let h1 = 1779033703,
+				h2 = 3144134277,
+				h3 = 1013904242,
+				h4 = 2773480762;
+			for (let i = 0, k; i < str.length; i++) {
+				k = str.charCodeAt(i);
+				h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+				h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+				h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+				h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+			}
+			h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+			h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+			h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+			h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+			(h1 ^= h2 ^ h3 ^ h4), (h2 ^= h1), (h3 ^= h1), (h4 ^= h1);
+			return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0].join("");
+		}
+
+		function setupSeed() {
+			const date = new Date();
+			const day = String(date.getUTCDate()).padStart(2, "0");
+			const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Months are zero-based
+			const year = date.getUTCFullYear();
+			const formattedDate = day + month + year;
+			console.log(formattedDate)
+			window.formattedDate = formattedDate
+			window.seeds = cyrb128(formattedDate);
+			window.seedIndex = 0;
+		}
+
+		Array.prototype.choose = function () {
+			if (window.seedIndex == window.seeds.length) {
+				window.seedIndex = 0;
+			}
+			var index = parseInt(window.seeds[window.seedIndex], 10) % this.length;
+
+			window.seedIndex++;
+			return this[index];
+		};
+
+		function scramble(length) {
+			// generate map of planes associated with each side
+			var planes = { x: ["L", "R"], y: ["U", "D"], z: ["F", "B"] };
+			var planeMap = {};
+			for (var plane in planes) {
+				var sides = planes[plane];
+				for (var i = 0; i < sides.length; i++) {
+					var side = sides[i];
+					planeMap[side] = plane;
+				}
+			}
+
+			var sides = ["F", "B", "R", "L", "U", "D"];
+			var modifiers = ["2", "'", ""];
+
+			// create buffer of moved sides
+			// once plane crossed, move on those sides is then permittalbe again
+
+			var weakBuffer = [],
+				moves = [];
+			for (var i = 0; i < length; i++) {
+				var mod = modifiers.choose(),
+					side;
+				if (weakBuffer.length == 0) {
+					side = sides.choose();
+				} else if (weakBuffer.length == 1) {
+					var badSide = weakBuffer[0],
+						newSides = sides.slice(),
+						badIndex = newSides.indexOf(badSide);
+					newSides.splice(badIndex, 1);
+
+					side = newSides.choose();
+
+					if (planeMap[side] != planeMap[badSide]) {
+						weakBuffer = []; // planes have been crossed
+					}
+				} else {
+					// double plane weakness
+					// neither side in weak buffer can be chosen
+
+					var newSides = sides.slice();
+					for (var a = 0; a < weakBuffer.length; a++) {
+						var badSide = weakBuffer[a],
+							badIndex = newSides.indexOf(badSide);
+						newSides.splice(badIndex, 1);
+					}
+
+					side = newSides.choose();
+
+					weakBuffer = [];
+				}
+				moves.push(side + mod);
+				weakBuffer.push(side);
+			}
+			return moves.join(" ");
+		}
+	</script>
+</head>
+
+<body>
+	<div class="container">
+		<h1>Scramble of the Day</h1>
+		<div id="result"></div>
+		<div id="countdown"></div>
+		<script>
+			function getRandomInt(max) {
+				return Math.floor(Math.random() * max);
+			}
+
+			function updateCountdown() {
+				const now = new Date();
+				const nextMidnight = new Date(
+					Date.UTC(
+						now.getUTCFullYear(),
+						now.getUTCMonth(),
+						now.getUTCDate() + 1
+					)
+				);
+				const timeDiff = nextMidnight - now;
+
+				const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
+				const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
+				const seconds = Math.floor((timeDiff / 1000) % 60);
+
+				document.getElementById(
+					"countdown"
+				).innerHTML = `Next scramble in: ${hours}h ${minutes}m ${seconds}s`;
+			}
+
+
+			function getScrambleLength(min, max) {
+				min = Math.ceil(min);
+				max = Math.floor(max);
+				return Math.floor(new Math.seedrandom(window.formattedDate)() * (max - min + 1)) + min;
+			}
+
+			// Initial scramble setup
+			setupSeed();
+			const min = 16;
+			const max = 22;
+
+			const length = getScrambleLength(17, 22)
+			document.getElementById("result").innerHTML = scramble(length);
+
+			// Update the countdown every second
+			setInterval(updateCountdown, 1000);
+			updateCountdown(); // Initial call to display immediately
+		</script>
+		</center>
+</body>
+
+</html>
